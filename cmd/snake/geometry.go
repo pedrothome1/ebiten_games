@@ -1,8 +1,8 @@
 package main
 
 type Position struct {
-	X int
-	Y int
+	X float64
+	Y float64
 }
 
 type Direction int
@@ -16,8 +16,8 @@ const (
 
 type Rectangle struct {
 	Pos    Position
-	Width  int
-	Height int
+	Width  float64
+	Height float64
 }
 
 func (r *Rectangle) isColliding(r2 *Rectangle) bool {

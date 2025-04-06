@@ -1,23 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"image/color"
+	"golang.org/x/image/colornames"
 )
 
 const (
-	Speed     = 10
 	BlockSize = 10
-)
-
-var (
-	Green = color.RGBA{2, 245, 27, 255}
-	Red   = color.RGBA{255, 0, 0, 255}
-
-	CurrentColor = Green
 )
 
 type Snake struct {
@@ -47,8 +36,6 @@ func (s *Snake) Update() error {
 		s.Dir = DirDown
 	} else if ebiten.IsKeyPressed(ebiten.KeyLeft) && s.Dir != DirRight {
 		s.Dir = DirLeft
-	} else if inpututil.IsKeyJustPressed(ebiten.KeySpace) { // test block add
-		s.addBodyBlock()
 	}
 
 	for i := len(s.Body) - 1; i >= 1; i-- {
@@ -57,42 +44,57 @@ func (s *Snake) Update() error {
 	}
 
 	if s.Dir == DirUp {
-		s.Body[0].Pos.Y -= Speed
+		s.Body[0].Pos.Y -= BlockSize
 	} else if s.Dir == DirRight {
-		s.Body[0].Pos.X += Speed
+		s.Body[0].Pos.X += BlockSize
 	} else if s.Dir == DirDown {
-		s.Body[0].Pos.Y += Speed
+		s.Body[0].Pos.Y += BlockSize
 	} else if s.Dir == DirLeft {
-		s.Body[0].Pos.X -= Speed
+		s.Body[0].Pos.X -= BlockSize
 	}
 
-	// TEMP: just testing collision detection
-	for i := 1; i < len(s.Body); i++ {
-		if s.Body[0].isColliding(s.Body[i]) {
-			CurrentColor = Red
-			break
-		}
+	if s.Body[0].Pos.X > ScreenWidth {
+		s.Body[0].Pos.X = 0
+	} else if s.Body[0].Pos.X < 0 {
+		s.Body[0].Pos.X = ScreenWidth
+	}
+
+	if s.Body[0].Pos.Y > ScreenHeight {
+		s.Body[0].Pos.Y = 0
+	} else if s.Body[0].Pos.Y < 0 {
+		s.Body[0].Pos.Y = ScreenHeight
 	}
 
 	return nil
 }
 
 func (s *Snake) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("Blocks: %d", len(s.Body)))
-
 	for _, square := range s.Body {
 		snakeBlock := ebiten.NewImage(10, 10)
-		snakeBlock.Fill(CurrentColor)
+		snakeBlock.Fill(colornames.Limegreen)
 
 		opt := &ebiten.DrawImageOptions{}
 
-		opt.GeoM.Translate(float64(square.Pos.X), float64(square.Pos.Y))
+		opt.GeoM.Translate(square.Pos.X, square.Pos.Y)
 
 		screen.DrawImage(snakeBlock, opt)
 	}
 }
 
-func (s *Snake) addBodyBlock() {
+func (s *Snake) SelfBite() bool {
+	for i := len(s.Body) - 1; i >= 1; i-- {
+		if s.Body[0].isColliding(s.Body[i]) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Snake) Head() *Rectangle {
+	return s.Body[0]
+}
+
+func (s *Snake) Grow() {
 	newBlock := &Rectangle{
 		Width:  BlockSize,
 		Height: BlockSize,
