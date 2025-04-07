@@ -28,6 +28,7 @@ func (g *Game) Update() error {
 	}
 
 	if g.Snake.Head().isColliding(g.Fruit.Rect) {
+		MustPlayWavSound(ChewingSound)
 		g.Snake.Grow()
 		g.Fruit = NewFruit()
 	}

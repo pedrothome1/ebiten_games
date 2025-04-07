@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"embed"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio/wav"
 	"golang.org/x/image/font/opentype"
 	"image"
 	_ "image/png"
@@ -16,6 +18,7 @@ var assets embed.FS
 var (
 	FruitSprites = mustLoadImages("assets/fruits/*.png")
 	VT323Font    = mustLoadFont("assets/VT323/VT323-Regular.ttf")
+	ChewingSound = mustLoadWav("assets/sounds/chewing_clean.wav")
 )
 
 func mustLoadImage(path string) *ebiten.Image {
@@ -59,4 +62,18 @@ func mustLoadFont(path string) *opentype.Font {
 	}
 
 	return parsedFont
+}
+
+func mustLoadWav(path string) *wav.Stream {
+	b, err := assets.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	stream, err := wav.DecodeWithoutResampling(bytes.NewReader(b))
+	if err != nil {
+		panic(err)
+	}
+
+	return stream
 }
